@@ -1,5 +1,4 @@
 require("dns").setDefaultResultOrder("ipv4first");
-
 require("dotenv").config();
 
 const express = require("express");
@@ -17,17 +16,18 @@ const app = express();
 
 connectDB();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", // Ganti dengan domain frontend kamu, contoh: "https://frontend-parmadverse.vercel.app"
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  }),
+);
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.json({
-    message: "ParmadVerse API Running",
-  });
-});
-
-app.get("/", (req, res) => {
-  res.send("API Running");
+  res.json({ message: "ParmadVerse API Running" });
 });
 
 app.use("/api/auth", authRoutes);
