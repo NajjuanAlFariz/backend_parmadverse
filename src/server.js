@@ -18,7 +18,7 @@ connectDB();
 
 app.use(
   cors({
-    origin: "*", // Ganti dengan domain frontend kamu, contoh: "https://frontend-parmadverse.vercel.app"
+    origin: "http://localhost:3000", // Ganti dengan domain frontend kamu, contoh: "https://frontend-parmadverse.vercel.app"
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
