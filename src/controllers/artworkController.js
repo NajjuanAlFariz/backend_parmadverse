@@ -63,11 +63,30 @@ exports.getAllArtworks = async (req, res) => {
 
     let artworks = await query.exec();
 
+    // Fetch comments count for each artwork
+    const commentCounts = await Comment.aggregate([
+      { $match: { artwork: { $in: artworks.map((a) => a._id) } } },
+      { $group: { _id: "$artwork", count: { $sum: 1 } } },
+    ]);
+
+    const commentCountMap = {};
+    commentCounts.forEach((c) => {
+      commentCountMap[c._id.toString()] = c.count;
+    });
+
+    let artworksWithComments = artworks.map((artwork) => {
+      const artObj = artwork.toObject({ virtuals: true });
+      artObj.comments = Array(commentCountMap[artwork._id.toString()] || 0).fill(null);
+      return artObj;
+    });
+
     if (sort === "popular") {
-      artworks = artworks.sort((a, b) => (b.likes ? b.likes.length : 0) - (a.likes ? a.likes.length : 0));
+      artworksWithComments = artworksWithComments.sort(
+        (a, b) => (b.likes ? b.likes.length : 0) - (a.likes ? a.likes.length : 0)
+      );
     }
 
-    res.json(artworks);
+    res.json(artworksWithComments);
   } catch (error) {
     res.status(500).json({
       message: error.message,

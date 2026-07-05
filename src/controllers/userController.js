@@ -94,6 +94,24 @@ exports.getUserProfile = async (req, res) => {
     const artworkIds = acceptedArtworks.map((a) => a._id);
     const totalComments = await Comment.countDocuments({ artwork: { $in: artworkIds } });
 
+    // Aggregate comments count for all artworks in this profile
+    const allArtworkIds = artworks.map((a) => a._id);
+    const commentCounts = await Comment.aggregate([
+      { $match: { artwork: { $in: allArtworkIds } } },
+      { $group: { _id: "$artwork", count: { $sum: 1 } } },
+    ]);
+
+    const commentCountMap = {};
+    commentCounts.forEach((c) => {
+      commentCountMap[c._id.toString()] = c.count;
+    });
+
+    const artworksWithComments = artworks.map((artwork) => {
+      const artObj = artwork.toObject({ virtuals: true });
+      artObj.comments = Array(commentCountMap[artwork._id.toString()] || 0).fill(null);
+      return artObj;
+    });
+
     res.json({
       user,
       statistik: {
@@ -101,7 +119,7 @@ exports.getUserProfile = async (req, res) => {
         totalLikes,
         totalComments,
       },
-      artworks,
+      artworks: artworksWithComments,
     });
   } catch (error) {
     res.status(500).json({
